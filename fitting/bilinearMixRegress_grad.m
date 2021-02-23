@@ -20,17 +20,18 @@ function [w_hat,wt,wx,wlin] = bilinearMixRegress_grad(xx,xy,wDims,p,indsbilin,la
 %   wHat = estimate of full param vector
 %   wt = column vectors
 %   wx = row vectors
-%
-% $Id$
 
 if (nargin >= 6) && ~isempty(lambda)  
     xx = xx + lambda*eye(size(xx)); % add ridge penalty to xx
 end
 
+% Set optimization options
 if (nargin < 7) || isempty(opts)
-    opts = optimset('gradobj', 'on', 'Hessian', 'on','display','iter');
+    %opts = optimset('gradobj','on','Hessian','on'); %OLD
+    opts = optimoptions('fminunc','algorithm','trust-region','SpecifyObjectiveGradient',true,'HessianFcn','objective');
 else
-    opts = optimset(opts, 'gradobj', 'on', 'Hessian', 'on');
+    % opts = optimset(opts, 'gradobj','on','Hessian','on'); % OLD
+    opts = optimoptions(opts,'algorithm','trust-region','SpecifyObjectiveGradient',true,'HessianFcn','objective');
 end
 
 % Set some params

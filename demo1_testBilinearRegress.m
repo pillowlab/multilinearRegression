@@ -5,8 +5,9 @@
 addpath tools
 addpath fitting
 
-nt = 50; % number of time coefficients
-nx = 10; % number of spatial coefficients
+% Set dimensions & rank
+nt = 100; % number of time coefficients
+nx = 20; % number of spatial coefficients
 rnk = 2; % rank
 
 % Make true weights (random low-rank matrix)
@@ -20,12 +21,10 @@ subplot(211);
 imagesc(wmat);
 
 % Generate training data
-nstim = 5000;
-signse = 10;
-X = randn(nstim,nw);
-Y = X*wtrue + randn(nstim,1)*signse;
-subplot(212);
-plot(X*wtrue, Y, 'o');
+nstim = 5000; % number of stimuli
+signse = 10;  % stdev of observation noise
+X = randn(nstim,nwtot); % stimuli
+Y = X*wtrue + randn(nstim,1)*signse; % observations
 
 % Pre-compute sufficient statistics
 XX = X'*X;
@@ -44,7 +43,9 @@ tic;
 t2 = toc;
 
 % Report timings
-fprintf('\ncomputation time (coordinate ascent): %f\n', t1);
+fprintf('\nBilinear ridge regression test:\n');
+fprintf('--------------------------------\n');
+fprintf('computation time (coordinate ascent): %f\n', t1);
 fprintf('computation time (joint ascent):      %f\n', t2);
 
 %% Plot filters and computer errors
@@ -57,7 +58,6 @@ title('vectorized weights');
 ylabel('coefficient');
 ylabel('coefficient #');
 box off;
-
 
 subplot(234); imagesc(wmat);
 title('true weights'); box off;

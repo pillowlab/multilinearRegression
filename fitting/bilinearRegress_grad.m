@@ -25,6 +25,7 @@ if (nargin >= 5) && ~isempty(lambda)
     xx = xx + lambda*eye(size(xx)); % add ridge penalty to xx
 end
 
+% Set optimization options
 if (nargin < 6) || isempty(opts)
     opts = optimoptions('fminunc','algorithm','trust-region','SpecifyObjectiveGradient',true,'HessianFcn','objective');
     
@@ -35,10 +36,9 @@ else
     
     % OLD SYNTAX FOR OPTIONS:    
     %opts = optimset(opts, 'gradobj', 'on', 'Hessian', 'on');
-
 end
 
-% Set some params
+% Set sizes and build sparse identity matrices
 nt = wDims(1);
 nx = wDims(2);
 It = speye(nt);
