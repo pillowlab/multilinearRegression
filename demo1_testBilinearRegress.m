@@ -5,21 +5,20 @@
 addpath tools
 addpath fitting
 
+% ---------------------------------------------
 % Set dimensions & rank
 nt = 100; % number of time coefficients
 nx = 20; % number of spatial coefficients
 rnk = 2; % rank
 
 % Make true weights (random low-rank matrix)
-A = gsmooth(randn(nt,rnk),2);  
-B = gsmooth(randn(nx,rnk),2)';
-nw = nt*nx;
-wmat = A*B;
-wtrue = vec(wmat);
+wt = gsmooth(randn(nt,rnk),2); % temporal filters
+wx = gsmooth(randn(nx,rnk),2)'; % spatial filters
+nw = nt*nx; % total number of filter coefficients
+wmat = wt*wx; % filter as a matrix
+wtrue = vec(wmat); % vectorized filter
 
-subplot(211);
-imagesc(wmat);
-
+% ---------------------------------------------
 % Generate training data
 nstim = 5000; % number of stimuli
 signse = 10;  % stdev of observation noise
@@ -29,18 +28,24 @@ Y = X*wtrue + randn(nstim,1)*signse; % observations
 % Pre-compute sufficient statistics
 XX = X'*X;
 XY = X'*Y;
-lambda = 1;
+lambda = 1; % ridge parameter 
 
+% ---------------------------------------------
 % Estimate W: coordinate ascent
 tic;
-[what1,wt,wx] = bilinearRegress_coordAscent(XX,XY,[nt,nx],rnk,lambda);
+[what1,wt1,wx1] = bilinearRegress_coordAscent(XX,XY,[nt,nx],rnk,lambda);
 t1 = toc;
 
+% ---------------------------------------------
 % Estimate W: gradient-based ascent
 opts = optimoptions(@fminunc, 'display', 'iter');  % set options (optional)
 tic;
 [what2,wt2,wx2] = bilinearRegress_grad(XX,XY,[nt,nx],rnk,lambda,opts);
 t2 = toc;
+
+% ---------------------------------------------
+% Plot filters and computer errors
+% ---------------------------------------------
 
 % Report timings
 fprintf('\nBilinear ridge regression test:\n');
@@ -48,8 +53,7 @@ fprintf('--------------------------------\n');
 fprintf('computation time (coordinate ascent): %f\n', t1);
 fprintf('computation time (joint ascent):      %f\n', t2);
 
-%% Plot filters and computer errors
-
+% Plot vectorized true and estimated filters
 subplot(211);
 tt = 1:nt*nx;
 plot(tt, wtrue,tt, what1(:),tt, what2(:),'--', 'linewidth', 2);
@@ -59,6 +63,7 @@ ylabel('coefficient');
 ylabel('coefficient #');
 box off;
 
+% Plot filters as low-rank matrices
 subplot(234); imagesc(wmat);
 title('true weights'); box off;
 ylabel('time (bins)'); xlabel('space (bins)');
