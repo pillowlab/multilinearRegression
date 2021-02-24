@@ -14,7 +14,7 @@ rnk = 2; % rank
 % Make true weights (random low-rank matrix)
 wt = gsmooth(randn(nt,rnk),2); % temporal filters
 wx = gsmooth(randn(nx,rnk),2)'; % spatial filters
-nw = nt*nx; % total number of filter coefficients
+nwtot = nt*nx; % total number of filter coefficients
 wmat = wt*wx; % filter as a matrix
 wtrue = vec(wmat); % vectorized filter
 
