@@ -8,6 +8,7 @@ function [w_hat,wt,wx,wlin] = bilinearMixRegress_coordAscent(xx,xy,wDims,prnk,in
 % where part of w is parametrized as vec(wt*wx')
 %
 % Inputs:
+% -------
 %   xx - autocorrelation of design matrix (unnormalized)
 %   xy - crosscorrelation between design matrix and dependent var (unnormalized)
 %   wDims - [nt, nx] two-vector specifying # rows & # cols of bilinearly parametrized w
@@ -18,12 +19,11 @@ function [w_hat,wt,wx,wlin] = bilinearMixRegress_coordAscent(xx,xy,wDims,prnk,in
 %          fields: 'MaxIter' [25], 'TolFun' [1e-6], 'Display' ['iter'|'off']
 %
 % Outputs:
+% -------
 %   w  = estimate of full param vector
 %   wlin = linearly parametrized portion
 %   wt = column vectors (bilinear portion)
 %   wx = row vectors (bilinear portion)
-%
-% $Id$
 
 if (nargin >= 6) && ~isempty(lambda)  
     xx = xx + lambda*eye(size(xx)); % add ridge penalty to xx
