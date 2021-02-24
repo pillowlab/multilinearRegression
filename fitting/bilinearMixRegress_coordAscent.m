@@ -1,5 +1,5 @@
-function [w_hat,wt,wx,wlin] = bilinearMixRegress_coordAscent(xx,xy,wDims,p,indsbilin,lambda,opts)
-% [w_hat,wt,wx,wlin] = bilinearMixRegress_coordAscent(xx,xy,wDims,p,indsbilin,lambda,opts)
+function [w_hat,wt,wx,wlin] = bilinearMixRegress_coordAscent(xx,xy,wDims,prnk,indsbilin,lambda,opts)
+% [w_hat,wt,wx,wlin] = bilinearMixRegress_coordAscent(xx,xy,wDims,rnk,indsbilin,lambda,opts)
 % 
 % Computes regression estimate with a bilinear parametrization of part of
 % the parameter vector.
@@ -43,8 +43,8 @@ nbi = length(indsbilin);
 nlin = nw-nbi;
 nt = wDims(1);
 nx = wDims(2);
-nwt = p*nt;
-nwx = p*nx;
+nwt = prnk*nt;
+nwx = prnk*nx;
 It = speye(nt);
 Ix = speye(nx);
 Ilin = speye(nlin);
@@ -61,8 +61,8 @@ iilin = nbi+1:nw; % new linear indices (last ones)
 w0 = xx\xy;
 wlin = w0(iilin);
 [wt,s,wx] = svd(reshape(w0(iibi),nt,nx));
-wt = wt(:,1:p)*sqrt(s(1:p,1:p));
-wx = sqrt(s(1:p,1:p))*wx(:,1:p)';
+wt = wt(:,1:prnk)*sqrt(s(1:prnk,1:prnk));
+wx = sqrt(s(1:prnk,1:prnk))*wx(:,1:prnk)';
 
 % Start coordinate ascent
 w = [vec(wt*wx); wlin];
@@ -80,13 +80,13 @@ while (iter <= opts.MaxIter) && (fchange > opts.TolFun)
     Mx = blkdiag(kron(wx',It),Ilin);
     wt = (Mx'*xx*Mx)\(Mx'*xy);
     wlin = wt(nwt+1:end);
-    wt = reshape(wt(1:nwt), nt,p);
+    wt = reshape(wt(1:nwt), nt,prnk);
     
     % Update spatial components
     Mt = blkdiag(kron(Ix, wt),Ilin);
     wx = (Mt'*xx*Mt)\(Mt'*xy);
     wlin = wx(nwx+1:end);
-    wx = reshape(wx(1:nwx),p,nx);
+    wx = reshape(wx(1:nwx),prnk,nx);
 
     % Compute size of change 
     w = [vec(wt*wx);wlin];

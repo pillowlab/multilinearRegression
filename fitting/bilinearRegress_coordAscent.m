@@ -1,5 +1,5 @@
-function [w_hat,wt,wx] = bilinearRegress_coordAscent(xx,xy,wDims,p,lambda,opts)
-% [w_hat,wcols,wrows] = bilinearRegress_coordAscent(xx,xy,wDims,p,opts)
+function [w_hat,wt,wx] = bilinearRegress_coordAscent(xx,xy,wDims,rnk,lambda,opts)
+% [w_hat,wcols,wrows] = bilinearRegress_coordAscent(xx,xy,wDims,rnk,opts)
 % 
 % Computes linear regression estimate with a bilinear parametrization of the parameter vector.  
 %
@@ -42,8 +42,8 @@ Ix = speye(nx);
 % Initialize estimate of w by linear regression and SVD
 w0 = xx\xy;
 [wt,s,wx] = svd(reshape(w0,nt,nx));
-wt = wt(:,1:p)*sqrt(s(1:p,1:p));
-wx = sqrt(s(1:p,1:p))*wx(:,1:p)';
+wt = wt(:,1:rnk)*sqrt(s(1:rnk,1:rnk));
+wx = sqrt(s(1:rnk,1:rnk))*wx(:,1:rnk)';
 
 % Start coordinate ascent
 w = vec(wt*wx);
@@ -60,12 +60,12 @@ while (iter <= opts.MaxIter) && (fchange > opts.TolFun)
     % Update temporal components
     Mx = kron(wx',It);
     wt = (Mx'*xx*Mx)\(Mx'*xy);
-    wt = reshape(wt, nt,p);
+    wt = reshape(wt, nt,rnk);
     
     % Update spatial components
     Mt = kron(Ix, wt);
     wx = (Mt'*xx*Mt)\(Mt'*xy);
-    wx = reshape(wx,p,nx);
+    wx = reshape(wx,rnk,nx);
 
     % Compute size of change 
     w = vec(wt*wx);
