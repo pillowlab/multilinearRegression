@@ -33,8 +33,9 @@ lambda = 1; % ridge parameter
 % ---------------------------------------------
 % Estimate W: coordinate ascent
 tic;
-[what1,wt1,wx1] = bilinearRegress_coordAscent(XX,XY,[nt,nx],rnk,lambda);
+[what1,wt1,wx1] = bilinearRegress_coordAscent_fast(XX,XY,[nt,nx],rnk,lambda);
 t1 = toc;
+
 
 % ---------------------------------------------
 % Estimate W: gradient-based ascent
