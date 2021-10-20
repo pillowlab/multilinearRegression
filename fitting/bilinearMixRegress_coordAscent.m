@@ -1,11 +1,10 @@
 function [w_hat,wt,wx,wlin] = bilinearMixRegress_coordAscent(xx,xy,wDims,prnk,indsbilin,lambda,opts)
 % [w_hat,wt,wx,wlin] = bilinearMixRegress_coordAscent(xx,xy,wDims,rnk,indsbilin,lambda,opts)
 % 
-% Computes regression estimate with a bilinear parametrization of part of
-% the parameter vector.
+% Computes regression estimate with multiple filters, each parametrized bilinearly
 %
 % Finds solution to argmin_w ||y - x*w||^2 + lambda*||w||^2
-% where part of w is parametrized as vec(wt*wx')
+% where w has multiple partitions, each parametrized as vec(wt_i*wx_i')
 %
 % Inputs:
 % -------

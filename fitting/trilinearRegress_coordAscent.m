@@ -4,14 +4,14 @@ function [w_hat,w1,w2,w3] = trilinearRegress_coordAscent(xx,xy,wDims,rnk,lambda,
 % Computes linear regression estimate with a rank-1 trilinear parametrization of the regression weights.  
 %
 % Finds solution to argmin_w ||y - x*w||^2 + lambda*||w||^2
-% where w is parametrized as a low rank 3rd order tensor: wt * wx1' * wx2'
+% where w is parametrized as a rank-1 3rd order tensor: w1 ^ w2 ^ w3;
 %
 % Inputs:
 % -------
 %   xx - autocorrelation of design matrix (unnormalized)
 %   xy - crosscorrelation between design matrix and dependent var (unnormalized)
-%   wDims - [nt, nx] two-vector specifying # rows & # cols of w.
-%   p - rank of bilinear filter
+%   wDims - [n1, n2, n3] 3-vector specifying # tensor coeffs for each dimension of the filter
+%   p - rank of tensor (MUST BE 1 FOR NOW)
 %   lambda - ridge parameter (optional)
 %   opts - options struct (optional)
 %          fields: 'MaxIter' [25], 'TolFun' [1e-6], 'Display' ['iter'|'off']
