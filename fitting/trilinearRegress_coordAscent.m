@@ -61,11 +61,6 @@ end
 
 while (iter <= opts.MaxIter) && (fchange > opts.TolFun)
 
-    
-%     wvec1 = kron(vec(wtrue2*wtrue3'),speye(n1))*wtrue1;
-%     wvec2 = kron(wtrue3,kron(speye(n2),wtrue1))*wtrue2;
-%     wvec3 = kron(speye(n3),vec(wtrue1*wtrue2'))*wtrue3;
-    
     % Update w1 component
     M1 = kron(vec(w2*w3'),I1);
     w1 = (M1'*xx*M1)\(M1'*xy);

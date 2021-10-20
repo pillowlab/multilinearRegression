@@ -7,9 +7,9 @@ addpath fitting
 
 % ---------------------------------------------
 % Set dimensions & rank
-n1 = 5; % number of time coefficients
+n1 = 29; % number of time coefficients
 n2 = 7; % number of spatial dim 1 coefficients
-n3 = 11; % number of spatial dim 2 coefficients
+n3 = 21; % number of spatial dim 2 coefficients
 nwtot = n1*n2*n3; % total number of filter coefficients
 rnk = 1; % rank
 
