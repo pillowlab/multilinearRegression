@@ -3,13 +3,10 @@
 % Tests out regression with multiple bilinearly parametrized filters
 
 % Notes: 
-%
-%  - purely linear filters can be incorporated by setting either
-%    nx or nt to 1 and rank = 1 for one of the filters
-
-%  - additive constant can be obtained by adding a filter with nt=nx=1 and
-%    rank=1
-% 
+% - Purely linear filters can be incorporated by setting either
+%   nx or nt to 1 and rank = 1 for one of the filters
+% - Additive constant can be obtained by adding a filter with nt=nx=1 and
+%   rank=1
 
 % Set up true filter sizes and ranks
 nt = [20,8,20];  % temporal lengths

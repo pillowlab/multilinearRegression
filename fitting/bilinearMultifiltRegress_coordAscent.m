@@ -44,7 +44,6 @@ end
 % -----------------------------------
 % Set some size params and build needed indices & sparse matrices
 nfilts = length(nt); % number of filters
-nwtot = length(xy);  % number of total filter coeffs
 nw = zeros(nfilts,1); % number of coeffs in each filter
 nwt = zeros(nfilts,1); % number of low rank column vector params
 nwx = zeros(nfilts,1); % number of low rank row vector params
@@ -75,7 +74,6 @@ end
 % -----------------------------------
 % Initialize estimate of w by linear regression and SVD
 w0 = xx\xy;
-wstruct = struct;
 wt = cell(nfilts,1);
 wx = cell(nfilts,1);
 
