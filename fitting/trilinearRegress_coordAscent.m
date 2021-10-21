@@ -40,10 +40,10 @@ I1 = speye(n1); I2 = speye(n2); I3 = speye(n3);
 wLS = xx\xy; 
 
 % Crude initialization: use SVDs to find low-rank initialization
-[w1,s,w2] = svd(reshape(wLS,n1,n2*n3)); % 1st svd for t vs x
+[w1,s,w2] = svd(reshape(wLS,n1,n2*n3),'econ'); % 1st svd for t vs x
 w1 = w1(:,1:rnk);
 w2 = w2(:,1:rnk)*s(1:rnk,1:rnk);
-[w2,s,w3] = svd(reshape(w2,n2,n3)); % 2nd svd for x1 vs x2
+[w2,s,w3] = svd(reshape(w2,n2,n3),'econ'); % 2nd svd for x1 vs x2
 w2 = w2(:,1:rnk);
 w3 = w3(:,1:rnk)*s(1:rnk,1:rnk);
 

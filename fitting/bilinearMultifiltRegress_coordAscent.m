@@ -81,7 +81,7 @@ wx = cell(nfilts,1);
 
 % do SVD on each relevant portion of w0
 for jj = 1:nfilts
-    [wt0,s,wx0] = svd(reshape(w0(inds{jj}),nt(jj),nx(jj))); % SVD
+    [wt0,s,wx0] = svd(reshape(w0(inds{jj}),nt(jj),nx(jj)),'econ'); % SVD
     wt{jj} = wt0(:,1:rnk(jj))*sqrt(s(1:rnk(jj),1:rnk(jj)));  % column vecs
     wx{jj} = sqrt(s(1:rnk(jj),1:rnk(jj)))*wx0(:,1:rnk(jj))'; % row vecs
 
