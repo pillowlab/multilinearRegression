@@ -36,14 +36,16 @@ end
 n1 = wDims(1); n2 = wDims(2); n3 = wDims(3);
 I1 = speye(n1); I2 = speye(n2); I3 = speye(n3); 
 
-% % compute least-squares full rank solutions
+% % compute full rank least-squares solution
 wLS = xx\xy; 
 
-% Crude initialization: use SVDs to find low-rank initialization
-[w1,s,w2] = svd(reshape(wLS,n1,n2*n3),'econ'); % 1st svd for t vs x
+% --- Crude initialization: use SVDs to find low-rank initialization ----
+% 1st svd for w1 vs others
+[w1,s,w2] = svd(reshape(wLS,n1,n2*n3),'econ'); 
 w1 = w1(:,1:rnk);
 w2 = w2(:,1:rnk)*s(1:rnk,1:rnk);
-[w2,s,w3] = svd(reshape(w2,n2,n3),'econ'); % 2nd svd for x1 vs x2
+% 2nd svd for w2 vs w3
+[w2,s,w3] = svd(reshape(w2,n2,n3),'econ'); 
 w2 = w2(:,1:rnk);
 w3 = w3(:,1:rnk)*s(1:rnk,1:rnk);
 
