@@ -1,4 +1,4 @@
-% demo4b_testMixedLinearBilinearRegress.m
+% demo4b_testMultiTrilinearRegress.m
 %
 % Tests out regression with multiple rank-1 trilinearly parametrized filters
 % (Note: only handles rank 1 at present)

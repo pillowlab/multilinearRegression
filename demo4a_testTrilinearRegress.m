@@ -1,6 +1,6 @@
-% demo4_testTrilinearRegress.m
+% demo4a_testTrilinearRegress.m
 %
-% Tests out bilinear ridge regression with bilinearly parametrized coefficient vector; 
+% Tests out trilinear ridge regression with trilinearly parametrized coefficient vector; 
 
 addpath tools
 addpath fitting
