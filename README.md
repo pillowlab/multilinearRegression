@@ -4,12 +4,25 @@ Matlab code for bilinear least-squares regression
 
 -----
 
-This repo contains code for least squares and ridge regression problems where all or part of the regression weights are parametrized linearly.  Formally this solves the problem:
+This repository contains code for least squares and ridge regression problems where all or part of the regression weights are parametrized linearly.  Formally this solves the problem:
 
 $\hat w = \arg \min_{\vec w} || \vec Y - X \vec w||^2_2 + \lambda ||\vec w||^2_2$, 
 
 subject to the constraint that $\vec w = \mathrm{vec}(UV^\top)$, for some matrices $U$ and $V$, where $Y$ are the outputs, $X$ is the design matrix, and $\lambda$ is the ridge parameter.
 
-It also allows for "mixed" bilinear regression, where we allow some coefficients of the regression weights $\vec w$ to be parametrized bilinearly, while others are parametrized linearly.
 
+### Problem settings ###
 
+- "mixed" bilinear regression, where we allow some coefficients of the regression weights $\vec w$ to be parametrized bilinearly, while others are parametrized linearly.
+
+- "multi" bilinear regression, where we allow different bilinear parametrizations (e.g., with different rank) for different segments of the regression weights
+
+- trilinear regression, where the regression weights are parametrized by a low-rank 3rd order tensor.
+
+### Algorithms ###
+
+There are two basic approaches to solving the optimization problem for $\hat w$:
+
+- **Alternating coordinate ascent** - this involves alternating between closed-form updates for $U$ and $V$ until convergence.
+
+- **Joint ascent** - direct simultaneous gradient ascent on $U$ and $V$. 
