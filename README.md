@@ -1,10 +1,10 @@
 # bilinearRegressionFitting
 
-Matlab code for bilinear least-squares regression
+Matlab code for bilinear and trilinear least-squares regression
 
 -----
 
-This repository contains code for least squares and ridge regression problems where all or part of the regression weights are parametrized linearly.  Formally this solves the problem:
+This repository contains code for least squares and ridge regression problems where all or part of the regression weights are parametrized bilinearly or trilinearly.  Formally, bilinear regression solves the problem:
 
 $\hat w = \arg \min_{\vec w} || \vec Y - X \vec w||^2_2 + \lambda ||\vec w||^2_2$, 
 
@@ -15,7 +15,7 @@ subject to the constraint that $\vec w = \mathrm{vec}(UV^\top)$, for some matric
 
 - "mixed" bilinear regression, where we allow some coefficients of the regression weights $\vec w$ to be parametrized bilinearly, while others are parametrized linearly.
 
-- "multi" bilinear regression, where we allow different bilinear parametrizations (e.g., with different rank) for different segments of the regression weights
+- "multiple" bilinear regression, where we allow different bilinear parametrizations (e.g., with different rank) for different segments of the regression weights
 
 - trilinear regression, where the regression weights are parametrized by a low-rank 3rd order tensor.
 
