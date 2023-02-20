@@ -29,7 +29,7 @@ if (nargin >= 5) && ~isempty(lambda)
 end
 
 if (nargin < 6) || isempty(opts)
-    opts.MaxIter = 25;
+    opts.MaxIter = 50;
     opts.TolFun = 1e-6;
     opts.Display = 'iter';
 end
@@ -38,11 +38,9 @@ end
 nt = wDims(1);
 nx = wDims(2);
 
-tic;
 % stuff needed for fast version
 xxtensr = reshape(xx,nt,nx,[]);
 xymat = reshape(xy,nt,nx);
-toc;
 
 % Initialize estimate of w by linear regression and SVD
 w0 = xx\xy; % least squares estimate
