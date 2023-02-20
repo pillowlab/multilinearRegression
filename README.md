@@ -8,7 +8,7 @@ This repository contains code for least squares and ridge regression problems wh
 
 $\hat w = \arg \min_{\vec w} || \vec Y - X \vec w||^2_2 + \lambda ||\vec w||^2_2$, 
 
-subject to the constraint that $\vec w = \mathrm{vec}(UV^\top)$, for some matrices $U$ and $V$, where $Y$ are the outputs, $X$ is the design matrix, and $\lambda$ is the ridge parameter.
+subject to the constraint that $\vec w = \mathrm{vec}(UV^\top)$, for some matrices $U$ and $V$, where $\vec Y$ are the outputs, $X$ is the design matrix, and $\lambda$ is the ridge parameter.
 
 
 ### Problem settings ###
