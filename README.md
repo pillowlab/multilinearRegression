@@ -21,8 +21,10 @@ subject to the constraint that $\vec w = \mathrm{vec}(UV^\top)$, for some matric
 
 ### Algorithms ###
 
-There are two basic approaches to solving the optimization problem for $\hat w$:
+There are implementations of two different methods for solving the optimization problem for $\hat w$:
 
 - **Alternating coordinate ascent** - this involves alternating between closed-form updates for $U$ and $V$ until convergence.
 
 - **Joint ascent** - direct simultaneous gradient ascent on $U$ and $V$. 
+
+See `demo1_testBilinearRegress.m` for a speed comparison; the optimal method seems to depend on the choice of dimensions and rank.
