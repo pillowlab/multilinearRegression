@@ -4,8 +4,7 @@
 % regression, and compare the closed-form RRR solution with bilinar
 % optimization. 
 
-addpath tools
-addpath fitting
+setpath; % set path 
 
 % ---------------------------------------------
 % Set dimensions & rank
