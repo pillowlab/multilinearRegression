@@ -1,4 +1,4 @@
-% demo5_RRRcomparison.m
+% demo_RRR.m
 %
 % Examine Reduced Rank Regression, which is a special case of bilinear
 % regression, and compare the closed-form RRR solution with bilinar

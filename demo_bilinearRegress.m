@@ -1,9 +1,8 @@
-% demo1_testBilinearRegress.m
+% demo_bilinearRegress.m
 %
-% Tests out bilinear ridge regression with bilinearly parametrized coefficient vector; 
+% Tests out bilinear ridge regression with bilinearly parametrized coefficient vector
 
-addpath tools
-addpath fitting
+setpath; % set path 
 
 % ---------------------------------------------
 % Set dimensions & rank

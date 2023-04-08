@@ -1,4 +1,4 @@
-% demo4b_testMultiTrilinearRegress.m
+% demo_multiTrilinearRegress.m
 %
 % Tests out regression with multiple rank-1 trilinearly parametrized filters
 % (Note: only handles rank 1 at present)
@@ -7,6 +7,8 @@
 %
 %  - regular linear filters can be incorporated by setting n2 = n3 = 1.
 %  - additive constant can be handled by a filter with n1 = n2 = n3 = 1.
+
+setpath; % set path 
 
 % Set up sizes and ranks for 4 filters
 n1 = [13,11,11,1];  % # of coefficients, 1st tensor dim

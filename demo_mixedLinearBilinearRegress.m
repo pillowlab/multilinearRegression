@@ -1,8 +1,9 @@
-% demo2_testMixedLinearBilinearRegress.m
+% demo_mixedLinearBilinearRegress.m
 %
 % Tests out bilinear ridge regression where part of coefficient vector is
-% partly parametrized bilinearly and the rest is linear.  
+% partly parametrized bilinearly and partly parametrized linearly
 
+setpath;  % set path
 
 % Set up true weights: part of the filter is bilinear, part is linear
 nt = 50;  % temporal length

@@ -83,7 +83,6 @@ w1=cell(nfilts,1); w2=cell(nfilts,1); w3=cell(nfilts,1); % initialize
 % do SVD on each relevant portion of w0
 for jj = 1:nfilts
     
-    jj 
     % first SVD to initialize w1
     [w10,s,w20] = svd(reshape(wLS(inds{jj}),n1(jj),n2(jj)*n3(jj)),'econ'); 
     w1{jj} = w10(:,1:rnk(jj));

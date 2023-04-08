@@ -1,9 +1,8 @@
-% demo4a_testTrilinearRegress.m
+% demo_trilinearRegress.m
 %
-% Tests out trilinear ridge regression with trilinearly parametrized coefficient vector; 
+% Tests out trilinear ridge regression with trilinearly parametrized coefficient vector
 
-addpath tools
-addpath fitting
+setpath; % set path 
 
 % ---------------------------------------------
 % Set dimensions & rank
