@@ -27,4 +27,4 @@ There are implementations of two different methods for solving the optimization 
 
 - **Joint ascent** - direct simultaneous gradient ascent on $U$ and $V$. 
 
-See `demo1_testBilinearRegress.m` for a speed comparison; the optimal method seems to depend on the choice of dimensions and rank.
+See `demo_bilinearRegress.m` for a speed comparison; the optimal method seems to depend on the choice of dimensions and rank.
