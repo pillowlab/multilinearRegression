@@ -1,4 +1,4 @@
-# bilinearRegressionFitting
+# multilinearRegression
 
 Matlab code for bilinear and trilinear least-squares regression
 
