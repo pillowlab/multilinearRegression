@@ -33,15 +33,12 @@ Y = X*wtruemat + randn(nstim,ny)*signse; % output neurons (observations)
 XX = X'*X;
 XY = X'*Y;
 
-%% Run RRR
-
 % compute LS solution
 wls = XX\XY;
 
-[~,~,vrrr] = svd(Y'*X*wls);  % perform SVD of relevant matrix
-vrrr = vrrr(:,1:rnk);      % get column vectors
-urrr= (X'*X)\(X'*Y*vrrr);  % get row vectors
-wrrr = urrr*vrrr';  % construct full RRR estimate
+%% Run reduced rank regression
+
+[wrrr,urrr,vrrr] = compRRR(X,Y,rnk);
 
 %% Estimate W using bilinear optimization (coordinate ascent algorithm)
 
