@@ -19,7 +19,7 @@ setpath; % set path
 % ==== Set dimensions & rank =========
 
 % Set up true filter sizes and ranks
-nin = [50,30];  % number of neurons in each input population
+nin = [50,60];  % number of neurons in each input population
 nout = 80;      % number of neurons in the output population
 rnks = [2,3];  % rank of each filter
 
@@ -141,12 +141,12 @@ ylabel('input neuron #'); xlabel('output neuron #');
 % plot reduced-rank estimates
 subplot(336);
 imagesc(wtfit{1}*wxfit{1});axis image;
-title('estim filter 1'); box off;
+title('low-rank estim filter 1'); box off;
 ylabel('input neuron #'); 
 xlabel('output neuron #'); 
 subplot(339);
 imagesc(wtfit{2}*wxfit{2}); axis image;
-title('estim filter 2'); box off;
+title('low-rank estim filter 2'); box off;
 ylabel('input neuron #'); xlabel('output neuron #'); 
 
 % Compute R^2 between true and estimated weights
