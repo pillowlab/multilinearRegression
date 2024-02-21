@@ -35,6 +35,10 @@ tic;
 [what1,wt1,wx1] = bilinearRegress_coordAscent_fast(XX,XY,[nt,nx],rnk,lambda);
 t1 = toc;
 
+% % slower method
+% tic;
+% [what1b,wt1b,wx1b] = bilinearRegress_coordAscent(XX,XY,[nt,nx],rnk,lambda);
+% t1b = toc;
 
 % ---------------------------------------------
 % Estimate W: gradient-based ascent
