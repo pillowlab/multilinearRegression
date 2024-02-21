@@ -34,7 +34,7 @@ for jj = 1:ninpops
     wwlowrank(jj).v = gsmooth(randn(nout,rnks(jj)),2); % v filter
     wwtrue{jj} = wwlowrank(jj).u*wwlowrank(jj).v';  % filter for population jj
 end
-wwfull = cell2mat(wwtrue); % concatenate filters into single matrix
+wwtruemat = cell2mat(wwtrue); % concatenate filters into single matrix
 
 %% ======= Generate training data by simulating from the model =========
 
@@ -49,7 +49,7 @@ end
 Xfull = cell2mat(Xin);
 
 % Compute simulated model output
-Yout = Xfull*wwfull;
+Yout = Xfull*wwtruemat;
 
 % % --------------------------
 % % Equivalent code, applying each filter to each population
@@ -77,13 +77,20 @@ wridgemat = reshape(wridge,nintot,nout); % reshape as a single matrix
 
 %% Estimate filters using coordinate ascent for bilinear regression model
 
-% Make the design matrix for regression problem: min ||Y - X vec(W)||^2
+% Here we need to make a single design matrix X such that we can rewrite
+% the optimization as
+%                        min ||vec(Y) - X vec(W)||^2
+% where vec(W) represents the individual filters vectorized and then
+% stacked on top of each other. To do this, we need to form X out of a
+% concatenation of kronecker matrices, one for each input population:
+%             X = [kron(I,X1) kron(I,X2) ...  kron(I,Xk)]
+
 tic;
-Xkron = cell(1,ninpops); % cell array for design matrices for each population
+Xkron = cell(1,ninpops); % cell array for per-population design matrices
 for jj = 1:ninpops
     Xkron{jj} = kron(speye(nout),Xin{jj}); % design matrix for jj'th input population
 end
-Xkronfull = cell2mat(Xkron);  % concatenate kronecker design matrices
+Xkronfull = cell2mat(Xkron);  % concatenate design matrices into 1 matrix
 XXkron = Xkronfull'*Xkronfull;  % 2nd moment matrix
 XYkron = Xkronfull'*vec(Yout);  % cross-covariance matrix
 t1 = toc;
@@ -102,15 +109,10 @@ fprintf('Time for bilinear optimization: %.4f sec\n\n',t2);
 wwvectrue = cell2mat(cellfun(@vec, wwtrue, 'UniformOutput', false));
 nwtot = length(wwvectrue);
 
-% vectorize and concatenate ridge filter
-wridgevec = zeros(nintot*nout,1);
-nincum = 0;
-for jj = 1:ninpops
-    vecfilt = vec(wridgemat(nincum+1:nincum+nin(jj),:)); % vectorized filter jj
-    wridgevec(nincum*nout+1:((nincum+nin(jj))*nout)) = vecfilt; % stack them
-    nincum = nincum+nin(jj); % update # of cumulative input neurons
-end
-    
+% vectorize ridge filter estimates and concatenate 
+wridgefilts = mat2cell(wridgemat,nin,nout);  % convert ridge matrix into cell array for individual filters
+wridgevec = cell2mat(cellfun(@vec, wridgefilts, 'UniformOutput', false)); % vectorize   
+
 % Plot true weights and estimate as a single (long) vector.
 subplot(311); 
 plot(1:nwtot,wwvectrue,1:nwtot,wridgevec,'--',1:nwtot,wvecfit,'--','linewidth',2);
