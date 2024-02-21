@@ -4,7 +4,7 @@ Matlab code for bilinear and trilinear least-squares regression
 
 -----
 
-This repository contains code for least squares and ridge regression problems where all or part of the regression weights are parametrized bilinearly or trilinearly.  Formally, bilinear regression solves the problem:
+This repository contains code for least squares and ridge regression problems where the regression weights are parametrized bilinearly or trilinearly.  Formally, bilinear regression solves the problem:
 
 $\hat w = \arg \min_{\vec w} || \vec Y - X \vec w||^2_2 + \lambda ||\vec w||^2_2$, 
 

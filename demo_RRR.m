@@ -1,8 +1,8 @@
 % demo_RRR.m
 %
-% Examine Reduced Rank Regression, which is a special case of bilinear
-% regression, and compare the closed-form RRR solution with bilinar
-% optimization. 
+% Examine Reduced Rank Regression (RRR), which is a special case of
+% bilinear regression, and compare the closed-form RRR solution with bilinar
+% optimization.  
 
 setpath; % set path 
 
@@ -51,7 +51,7 @@ opts.MaxIter = 50;
 opts.TolFun = 1e-8;
 opts.Display = 'off';
 
-lambda = 0;  % remove the ridge parameter
+lambda = 0;  % set the ridge parameter to zero
 [wbilin,ubilin,vbilin] = bilinearRegress_coordAscent_fast(XXvec,XYvec,[nx,ny],rnk,lambda,opts);  % solve by bilinear optimization
 
 
