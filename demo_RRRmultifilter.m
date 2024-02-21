@@ -19,8 +19,8 @@ setpath; % set path
 % ==== Set dimensions & rank =========
 
 % Set up true filter sizes and ranks
-nin = [50,60];  % number of neurons in each input population
-nout = 80;      % number of neurons in the output population
+nin = [80,90];  % number of neurons in each input population
+nout = 100;      % number of neurons in the output population
 rnks = [2,3];  % rank of each filter
 
 ninpops = length(nin); % number of input populations
@@ -85,7 +85,7 @@ wridgemat = reshape(wridge,nintot,nout); % reshape as a single matrix
 % concatenation of kronecker matrices, one for each input population:
 %             X = [kron(I,X1) kron(I,X2) ...  kron(I,Xk)]
 
-tic;
+tic; % time building the design matrix
 Xkron = cell(1,ninpops); % cell array for per-population design matrices
 for jj = 1:ninpops
     Xkron{jj} = kron(speye(nout),Xin{jj}); % design matrix for jj'th input population
@@ -96,8 +96,8 @@ XYkron = Xkronfull'*vec(Yout);  % cross-covariance matrix
 t1 = toc;
 fprintf('Time to build kronecker design matrix: %.4f sec\n\n',t1);
 
-% Perform optimization
-tic;
+% Perform optimization of the weights
+tic; % time optimization
 [wtfit,wxfit,wvecfit] = bilinearMultifiltRegress_coordAscent(XXkron,XYkron,nin,nout*ones(1,ninpops),rnks,lambda);
 t2 = toc;
 fprintf('Time for bilinear optimization: %.4f sec\n\n',t2);
