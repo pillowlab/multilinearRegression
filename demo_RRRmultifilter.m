@@ -1,33 +1,53 @@
 % demo_RRR.m
 %
-% Examine Reduced Rank Regression (RRR), which is a special case of
-% bilinear regression, and compare the closed-form RRR solution with bilinar
-% optimization.  
+% Examine multi-filter Reduced Rank Regression (RRR), defined by the
+% low-rank multivariate regression problem:
+%  
+%  y = W_1 x_1 + W_2 x_2 + ... + W_k x_k + noise
+%
+% y is an n-vector, x_1, ..., x_k are vectors of lenth m1, ..., mk,
+% and W_1 \in {n x m1}, ..., W_k \in {n x mk} are
+% regression weight matrices of rank r1, ..., rk.
+%
+% When k=1, this is standard RRR.
+
+
+%% Setup.
 
 setpath; % set path 
 
-% ---------------------------------------------
-% Set dimensions & rank
+% ==== Set dimensions & rank =========
 
-nx = 50; % number of input neurons
-ny = 30; % number of output neurons
-rnk = 3;  % rank
+% Set up true filter sizes and ranks
+ww = struct;  % structure for true filters
+ww.nin = [20,30];  % number of neurons in each input population
+ww.nout = [100];   % number of neurons in output population
+ww.rnk = [1,2];  % rank of each filter
 
-% ----------------------------------------------
-% Make true weights (random low-rank matrix)
-wx = gsmooth(randn(nx,rnk),3); % column vectors
-wy = gsmooth(randn(ny,rnk),3)'; % row vectors
+ww.ninpops = length(ww.nin); % number of input populations
+ww.nintot = sum(ww.nin);     % total number of input neurons
 
-nwtot = nx*ny; % total number of filter coefficients
-wtruemat = wx*wy; % filter as a matrix
-wtruevec = vec(wtruemat); % vectorized filter
+% =======  Make true filters ======
+ww.fullflt = zeros(nintot,ww.nout);
+nincum = 0; % cumulative # of input neurons
+for jj = 1:ww.ninpops
+    ww.flts(jj).u = gsmooth(randn(ww.nin(jj),ww.rnk(jj)),2); % v filter
+    ww.flts(jj).v = gsmooth(randn(ww.nout,ww.rnk(jj)),2); % u filter
+    ww.flts(jj).flt = ww.flts(jj).u*ww.flts(jj).v';  % filter for population jj
+    
+    % add this filter to the full all-population filter (by stacking them)
+    ww.fullflt(nincum+1:nincum+ww.nin(jj),:) = ww.flts(jj).flt;
+    nincum = nincum+ww.nin(jj); % update cumulative # of input neurons
+end
 
-% ---------------------------------------------
-% Generate training data
+%% ======= Generate training data by simulating from the model =========
 nstim = 500; % number of trials 
 signse = 3;  % stdev of observation noise
-X = randn(nstim,nx); % input neurons
-Y = X*wtruemat + randn(nstim,ny)*signse; % output neurons (observations)
+X = randn(nstim,nintot); % input neurons
+
+% Compute model output
+Y = X*ww.fullflt + randn(nstim,ny)*signse; % output neurons (observations)
+
 
 % Pre-compute sufficient statistics
 XX = X'*X;
@@ -36,46 +56,6 @@ XY = X'*Y;
 % compute LS solution
 wls = XX\XY;
 
-%% Run reduced rank regression
-
-[wrrr,urrr,vrrr] = compRRR(X,Y,rnk);
-
-%% Estimate W using bilinear optimization (coordinate ascent algorithm)
-
-% Make the necessary design matrix
-XXvec = kron(speye(ny),XX); % design matrix for vectorized problem
-XYvec = XY(:);  % vectorized XY matrix
-
-% set options
-opts.MaxIter = 50;
-opts.TolFun = 1e-8;
-opts.Display = 'off';
-
-lambda = 0;  % set the ridge parameter to zero
-[wbilin,ubilin,vbilin] = bilinearRegress_coordAscent_fast(XXvec,XYvec,[nx,ny],rnk,lambda,opts);  % solve by bilinear optimization
 
 
-%% Make plots and compute R^2 
-
-subplot(221); imagesc(wtruemat); 
-title(sprintf('true filter (rank=%d)',rnk));
-
-subplot(222); imagesc(wls); 
-title('least squares');
-
-subplot(223); imagesc(wrrr); 
-title('RRR');
-
-subplot(224); imagesc(wbilin);
-title('bilinear optim');
-
-% Compute R^2 between true and estimated weights
-msefun = @(x,y)(mean((x-y).^2));
-r2fun = @(x)(1-msefun(x(:),wtruevec)./msefun(wtruevec,mean(wtruevec)));
-
-fprintf('\nPerformance comparison (R^2):\n');
-fprintf('----------------------------\n');
-fprintf(' least-squares: %.3f\n',r2fun(wls));
-fprintf('           RRR: %.3f\n',r2fun(wrrr));
-fprintf('bilinear optim: %.3f\n',r2fun(wbilin));
 

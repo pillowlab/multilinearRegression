@@ -39,13 +39,17 @@ signse = 5;  % stdev of observation noise
 X = randn(nstim,nwtot); % stimuli
 Y = X*wtrue + randn(nstim,1)*signse; % observations
 
+
+% -------------------------------------
+% Estimate by Coordinate Ascent 
+
+lambda = 10;  % set ridge parameter
+
 % Compute sufficient statistics
 XX = X'*X;
 XY = X'*Y;
 
-% -------------------------------------
-% Estimate by Coordinate Ascent 
-lambda = 10;  % ridge parameter
+% Perform optimization
 tic;
 [wtfit,wxfit,wvecfit] = bilinearMultifiltRegress_coordAscent(XX,XY,nt,nx,rnk,lambda);
 toc;
