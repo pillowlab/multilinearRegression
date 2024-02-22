@@ -1,4 +1,4 @@
-function [wt,wx,wvec] = bilinearMultifiltRegress_coordAscent(xx,xy,nt,nx,rnk,lambda,opts)
+function [wt,wx,wvec] = bilinearMultifiltRegress_coordAscent(xx,xy,nt,nx,rnks,lambda,opts)
 % wstruct = bilinearMultifiltRegress_coordAscent(xx,xy,nt,nx,rnk,indsbilin,lambda,opts)
 % 
 % Computes regression estimate with a bilinear parametrization of part of
@@ -38,7 +38,7 @@ if ~isfield(opts, 'Display'); opts.Display = 'iter'; end
 % ----------------------------------
 % add ridge penalty to diagonal of xx
 if (nargin >= 6) && ~isempty(lambda)  
-    xx = xx + lambda*eye(size(xx)); 
+    xx = xx + lambda*speye(size(xx)); 
 end
 
 % -----------------------------------
@@ -49,7 +49,7 @@ nwt = zeros(nfilts,1); % number of low rank column vector params
 nwx = zeros(nfilts,1); % number of low rank row vector params
 ntcll = num2cell(nt(:));   % length of col vectors (as cell array)
 nxcll = num2cell(nx(:));   % length of row vectors (as cell array)
-rnkcll = num2cell(rnk(:)); % filter ranks (as cell array)
+rnkcll = num2cell(rnks(:)); % filter ranks (as cell array)
 
 % Calculate sizes 
 icum = 0;
@@ -58,8 +58,8 @@ It = cell(nfilts,1);
 Ix = cell(nfilts,1);
 for jj = 1:nfilts
     nw(jj) = nt(jj)*nx(jj);  % number of filter coeffs in each filter
-    nwt(jj) = rnk(jj)*nt(jj); % number of params in column vectors
-    nwx(jj) = rnk(jj)*nx(jj); % number of params in row vectors
+    nwt(jj) = rnks(jj)*nt(jj); % number of params in column vectors
+    nwx(jj) = rnks(jj)*nx(jj); % number of params in row vectors
 
     % set indices for these coeffs
     inds{jj} = icum+1:icum+nw(jj);
@@ -73,16 +73,17 @@ end
 
 % -----------------------------------
 % Initialize estimate of w by linear regression and SVD
-w0 = xx\xy;
+w0 = (xx)\xy;
 wt = cell(nfilts,1);
 wx = cell(nfilts,1);
 
 % do SVD on each relevant portion of w0
 for jj = 1:nfilts
-    [wt0,s,wx0] = svd(reshape(w0(inds{jj}),nt(jj),nx(jj)),'econ'); % SVD
-    wt{jj} = wt0(:,1:rnk(jj))*sqrt(s(1:rnk(jj),1:rnk(jj)));  % column vecs
-    wx{jj} = sqrt(s(1:rnk(jj),1:rnk(jj)))*wx0(:,1:rnk(jj))'; % row vecs
+    [wt0,s,wx0] = svd(reshape(w0(inds{jj}),nt(jj),nx(jj)),'econ'); % do SVD
 
+    ii = 1:rnks(jj); % indices of singular vectors to keep
+    wt{jj} = wt0(:,ii)*sqrt(s(ii,ii));  % column vecs
+    wx{jj} = sqrt(s(ii,ii))*wx0(:,ii)'; % row vecs
 end
 
 % -----------------------------------
