@@ -1,8 +1,8 @@
 function [wt,wx,wvec] = bilinearMultifiltRegress_coordAscent(xx,xy,nt,nx,rnks,lambda,opts)
 % wstruct = bilinearMultifiltRegress_coordAscent(xx,xy,nt,nx,rnk,indsbilin,lambda,opts)
 % 
-% Computes regression estimate with a bilinear parametrization of part of
-% the parameter vector.
+% Computes regression estimate with a bilinear parametrization of multiple
+% portions of the parameter vector.
 %
 % Finds solution to argmin_w ||y - x*w||^2 + lambda*||w||^2
 % where part of w is parametrized as vec(wt*wx')
