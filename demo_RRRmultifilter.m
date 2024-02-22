@@ -19,12 +19,20 @@ setpath; % set path
 % ==== Set dimensions & rank =========
 
 % Set up true filter sizes and ranks
-nin = [150,150];  % number of neurons in each input population
-nout = 150;      % number of neurons in the output population
-rnks = [5,5];  % rank of each filter
+nin = [45,80];  % number of neurons in each input population
+nout = 90;      % number of neurons in the output population
+rnks = [3,5];  % rank of each filter
+nstim = 2000; % number of trials 
+signse = 5;  % stdev of observation noise
 
 ninpops = length(nin); % number of input populations
 nintot = sum(nin);     % total number of input neurons
+
+fprintf('--------------------------------------\n');
+fprintf('Simulating dataset with:\n');
+fprintf('%d input neurons (%d populations)\n',nintot, ninpops);
+fprintf('%d output neurons\nfor %d time steps\n',nout,nstim);
+fprintf('--------------------------------------\n\n');
 
 % =======  Make true filters ======
 wwlowrank = struct; % struct for storing filters
@@ -36,10 +44,8 @@ for jj = 1:ninpops
 end
 wwtruemat = cell2mat(wwtrue); % concatenate filters into single matrix
 
-%% ======= Generate training data by simulating from the model =========
 
-nstim = 1000; % number of trials 
-signse = 3;  % stdev of observation noise
+%% ======= Generate training data by simulating from the model =========
 
 % Generate input population responses
 Xin = cell(1,ninpops);
@@ -74,7 +80,7 @@ XY = Xfull'*Yout;   % stim-response cross-covariance
 % compute ridge solution
 wridge = (XX+lambda*eye(nintot))\XY; % ridge regression solution (matrix)
 
-%% Estimate filters generic algorithm for bilinear regression model
+%% Estimate filters generic algorithm for bilinear regression model (slow)
 
 % Here we need to make a single design matrix X such that we can rewrite
 % the optimization as
@@ -97,18 +103,21 @@ fprintf('Time to build kronecker design matrix: %.4f sec\n\n',t1);
 
 % Perform optimization of the weights
 tic; % time optimization
-[wUfit,wVfit,wwfitvec] = bilinearMultifiltRegress_coordAscent(XXkron,XYkron,nin,nout*ones(1,ninpops),rnks,lambda);
+[wUfit,wVtfit,wwfitvec] = bilinearMultifiltRegress_coordAscent(XXkron,XYkron,nin,nout*ones(1,ninpops),rnks,lambda);
 t2 = toc;
 fprintf('Time for standard bilinear optimization algorithm: %.4f sec\n\n',t2);
 
-%% Estimate filters using algorithm specific to RRR with multiple filters
+%% Estimate filters using algorithm specific to RRR with multiple filters (fast)
+
+% This version uses an algorithm which explicitly takes into account that
+% this is multivariate regression, so Yout is a matrix whose columns would
+% (were the problem not low rank) correspond to independent regression
+% problems.
 
 tic;
-[wUfit2,wVtfit2,wwfitvec2] = bilinearMultifiltRRR_coordAscent(Xin,Yout,nin,rnks,lambda);
+[wUfit2,wVtfit2,wwfilts2] = bilinearMultifiltRRR_coordAscent(Xin,Yout,nin,rnks,lambda);
 t3 = toc;
 fprintf('Time for multi-filter RRR optimization: %.4f sec\n\n',t3);
-
-
 
 %% Make plots (assuming 2 filters in model)
 
@@ -119,6 +128,9 @@ nwtot = length(wwvectrue);
 % vectorize ridge filter estimates and concatenate 
 wridgefilts = mat2cell(wridge,nin,nout);  % convert ridge matrix into cell array for individual filters
 wridgevec = cell2mat(cellfun(@vec, wridgefilts, 'UniformOutput', false)); % vectorize   
+
+% vectorize RRR estimated filters
+wwfitvec2 = cell2mat(cellfun(@vec, wwfilts2, 'UniformOutput', false));
 
 % Plot true weights and estimate as a single (long) vector.
 subplot(311); 
@@ -149,12 +161,12 @@ ylabel('input neuron #'); xlabel('output neuron #');
 
 % plot reduced-rank estimates
 subplot(336);
-imagesc(wUfit{1}*wVfit{1});axis image;
+imagesc(wUfit{1}*wVtfit{1});axis image;
 title('low-rank estim filter 1'); box off;
 ylabel('input neuron #'); 
 xlabel('output neuron #'); 
 subplot(339);
-imagesc(wUfit{2}*wVfit{2}); axis image;
+imagesc(wUfit{2}*wVtfit{2}); axis image;
 title('low-rank estim filter 2'); box off;
 ylabel('input neuron #'); xlabel('output neuron #'); 
 
@@ -163,3 +175,4 @@ msefun = @(x,y)(mean((x-y).^2));
 r2fun = @(x,y)(1-msefun(x,y)./msefun(y,mean(y)));
 fprintf('R-squared (ridge):    %.3f\n',r2fun(wridgevec, wwvectrue));
 fprintf('R-squared (bilinear): %.3f\n',r2fun(wwfitvec, wwvectrue));
+fprintf('R-squared (RRR):      %.3f\n',r2fun(wwfitvec2, wwvectrue));

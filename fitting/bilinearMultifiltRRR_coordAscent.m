@@ -1,11 +1,14 @@
 function [wU,wVt,wwfilts] = bilinearMultifiltRRR_coordAscent(Xin,Yout,nin,rnks,lambda,opts)
-% [wU,wVt,wwfilts] = bilinearMultifiltRRR_coordAscent(X,Y,nin,rnks,lambda,opts)
+% [wU,wVt,wwfilts] = bilinearMultifiltRRR_coordAscent(Xin,Yout,nin,rnks,lambda,opts)
 % 
-% Computes regression estimate with a bilinear parametrization of part of
+% Computes low-rank regression estimate using coordinate ascent in the
+% multi-filter reduced rank regression (RRR) problem setting 
 % the parameter vector.
 %
-% Finds solution to argmin_w ||y - x*w||^2 + lambda*||w||^2
-% where part of w is parametrized as vec(wt*wx')
+% Finds solution to: 
+%   argmin_{W_i} ||Y - \sum_i Xi Wi||_F^2 + lambda*\sum_i ||W_i||_F^2
+% where the matrices {W_i} are all low rank, parametrized as
+%   W_i = U_i V_i^T
 %
 % Inputs:
 % -------
@@ -13,20 +16,22 @@ function [wU,wVt,wwfilts] = bilinearMultifiltRRR_coordAscent(Xin,Yout,nin,rnks,l
 %   Y - output population response matrix (T x nout) 
 %   nin - # of input neurons in each input populatin
 %   rnks - rank of each low-rank filter
+%
 %   lambda - ridge parameter (optional)  (NOT YET SUPPORTED)
+%
 %   opts - options struct (optional)
 %          fields: 'MaxIter' [25], 'TolFun' [1e-6], 'Display' ['iter'|'off']
 %
 % Outputs:
 % -------
-%   wstruct  = vector of structures with fields:
-%     .wt = column vectors 
-%     .wx = row vectors 
-%     .wfilt = wt*wx';
-%   wvec = full vector of regression weights
+%   wU  = column vector matrices (cell array)
+%   wVt = row vector matrices    (cell array)
+%   wwfilts = low rank filters   (cell array)
 
-% ----------------------------------
+
+% ---------------------------------------------------
 % set optimization options
+% ---------------------------------------------------
 if (nargin < 6) || isempty(opts)
     opts.default = true;
 end
@@ -38,8 +43,9 @@ ninpops = length(nin); % number of input populations
 nintot = sum(nin);     % total number of input neurons
 nout = size(Yout,2);
 
-% -----------------------------------
-% Initialize estimate of w by ridge regression and SVD
+% ---------------------------------------------------
+% Initialize using SVD of ridge regression estimate
+% ---------------------------------------------------
 % (Note: an alternative would be to initialize with RRR)
 
 % Compute sufficient statistics
@@ -61,41 +67,41 @@ for jj = 1:ninpops
     wVt{jj} = sqrt(s(ii,ii))*v0(:,ii)'; % right singular vectors (weighted by singular values)
 end
 
-% -----------------------------------
-% Initialize coordinate ascent
+% ---------------------------------------------------
+% Set up coordinate ascent 
+% ---------------------------------------------------
 
-% % define useful function: vectorize after matrix multiply
-% vecMatMult = @(x,y)(vec(mtimes(x,y))); 
-% 
-% % Compute full weight vector from its low-rank components
-% wwfilts = cellfun(vecMatMult,wu,wv,'UniformOutput',false); % full weights in cell array
-% wwfilts = cell2mat(wwfilts); % convert to vector
-
+% Convert initial filters into a matrix
 ww0 = cellfun(@mtimes,wU,wVt,'UniformOutput',false);
 ww0 = cell2mat(ww0);
 
+% Evaluate the loss function at the start of training
 fval = 0.5*trace(ww0'*XX*ww0) - sum(sum((ww0.*XY)));
-fchange = inf;
-iter = 1;
+fchange = inf; % change in function value
+iter = 1;  % iteration counter
 
+% Report initial loss (if 'Display' set to 'iter')
 if strcmp(opts.Display, 'iter')
     fprintf('--- Coordinate descent of multi-filter RRR loss ---\n');
     fprintf('Iter 0: fval = %.4f\n',fval);
 end
 
 % % define some useful cell functions and a cell array we'll need
-fun_Ureshape = @(v,r)(reshape(v,[],r)); % function to reshape U matrices 
-fun_mtimesTrp = @(A,B)(vec(mtimes(A,B')));       % function to compute kronecker of transpose with matrix
+fun_Ureshape = @(v,r)(reshape(v,[],r));    % function to reshape U matrices 
+fun_mtimesTrp = @(A,B)(vec(mtimes(A,B'))); % function to compute kronecker of transpose with matrix
 rnks_cell = num2cell(rnks(:));          % filter ranks as cell array
 XXc = mat2cell(XX,nin,nin);
 XYc = mat2cell(XY,nin,nout);
-% -----------------------------------
-% Run coordinate ascent
+
+% ---------------------------------------------------
+% Optimize:  Run alternating coordinate ascent on U and Vt
+% ---------------------------------------------------
 
 while (iter <= opts.MaxIter) && (fchange > opts.TolFun)
     
     % ===========================
     % Update U (column vectors)
+    % ===========================
         
     % project Xin onto corresponding V matrices and do regression
     
@@ -116,7 +122,8 @@ while (iter <= opts.MaxIter) && (fchange > opts.TolFun)
 
     % ===========================
     % Update Vt (row vectors)
-
+    % ===========================
+    
     % project Xin onto corresponding U matrices and do regression
     Mu = cell2mat(cellfun(@mtimes,Xin,wU','UniformOutput',false)); % design matrix for estimating Vt
     Vtnew = (Mu'*Mu)\(Mu'*Yout); % solve regression problem for Vt
@@ -124,14 +131,21 @@ while (iter <= opts.MaxIter) && (fchange > opts.TolFun)
 
     % ===========================
     % Compute each weight matrix from its low-rank components
-    wwfilts = cellfun(@mtimes,wU,wVt,'UniformOutput',false); % full weights in cell array
-    ww = cell2mat(wwfilts);
+    % ===========================
     
+    wwfilts = cellfun(@mtimes,wU,wVt,'UniformOutput',false); % full weights in cell array
+    
+    % ===========================
     % Evaluate loss function & size of change
+    % ===========================
+    
+    ww = cell2mat(wwfilts);  % put filters into a single weight matrix
     fvalnew = 0.5*trace(ww'*XX*ww) - sum(sum((ww.*XY)));
     fchange = fval-fvalnew;
     fval = fvalnew;
     iter = iter+1;
+    
+    % Report change in error (if desired)
     if strcmp(opts.Display, 'iter')
         fprintf('Iter %d: fval = %.4f,  fchange = %.4f\n',iter-1,fval,fchange);
     end

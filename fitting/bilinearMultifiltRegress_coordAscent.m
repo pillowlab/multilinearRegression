@@ -26,8 +26,10 @@ function [wt,wx,wvec] = bilinearMultifiltRegress_coordAscent(xx,xy,nt,nx,rnks,la
 %     .wfilt = wt*wx';
 %   wvec = full vector of regression weights
 
-% ----------------------------------
+% ---------------------------------------------------
 % set optimization options
+% ---------------------------------------------------
+
 if (nargin < 7) || isempty(opts)
     opts.default = true;
 end
@@ -35,14 +37,16 @@ if ~isfield(opts, 'MaxIter'); opts.MaxIter = 25; end
 if ~isfield(opts, 'TolFun'); opts.TolFun = 1e-6; end
 if ~isfield(opts, 'Display'); opts.Display = 'iter'; end
 
-% ----------------------------------
+% ---------------------------------------------------
 % add ridge penalty to diagonal of xx
+% ---------------------------------------------------
 if (nargin >= 6) && ~isempty(lambda)  
     xx = xx + lambda*speye(size(xx)); 
 end
 
-% -----------------------------------
+% ---------------------------------------------------
 % Set some size params and build needed indices & sparse matrices
+% ---------------------------------------------------
 nfilts = length(nt); % number of filters
 nw = zeros(nfilts,1); % number of coeffs in each filter
 nwt = zeros(nfilts,1); % number of low rank column vector params
@@ -71,8 +75,9 @@ for jj = 1:nfilts
 
 end
 
-% -----------------------------------
-% Initialize estimate of w by linear regression and SVD
+% ---------------------------------------------------
+% Initialize using SVD of ridge regression estimate
+% ---------------------------------------------------
 w0 = (xx)\xy;
 wt = cell(nfilts,1);
 wx = cell(nfilts,1);
@@ -86,8 +91,9 @@ for jj = 1:nfilts
     wx{jj} = sqrt(s(ii,ii))*wx0(:,ii)'; % row vecs
 end
 
-% -----------------------------------
+% ---------------------------------------------------
 % Initialize coordinate ascent
+% ---------------------------------------------------
 
 % define useful function: vectorize after matrix multiply
 vecMatMult = @(x,y)(vec(mtimes(x,y))); 
@@ -109,8 +115,9 @@ end
 % define useful function: compute kronecker of transpose with matrix
 kronTrp = @(v,A)(kron(v',A)); 
 
-% -----------------------------------
-% Run coordinate ascent
+% ---------------------------------------------------
+% Optimize: Run alternating coordinate ascent for U and Vt
+% ---------------------------------------------------
 
 while (iter <= opts.MaxIter) && (fchange > opts.TolFun)
     
@@ -143,6 +150,8 @@ while (iter <= opts.MaxIter) && (fchange > opts.TolFun)
     fchange = fval-fvalnew;
     fval = fvalnew;
     iter = iter+1;
+    
+    % Report change in error (if desired)
     if strcmp(opts.Display, 'iter')
         fprintf('Iter %d: fval = %.4f,  fchange = %.4f\n',iter-1,fval,fchange);
     end
