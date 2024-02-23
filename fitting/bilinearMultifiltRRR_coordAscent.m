@@ -1,4 +1,4 @@
-function [wU,wVt,wwfilts] = bilinearMultifiltRRR_coordAscent(Xin,Yout,nin,rnks,lambda,opts)
+function [wU,wVt,wwfilts] = bilinearMultifiltRRR_coordAscent(Xin,Yout,rnks,lambda,opts)
 % [wU,wVt,wwfilts] = bilinearMultifiltRRR_coordAscent(Xin,Yout,nin,rnks,lambda,opts)
 % 
 % Computes low-rank regression estimate using coordinate ascent in the
@@ -32,16 +32,26 @@ function [wU,wVt,wwfilts] = bilinearMultifiltRRR_coordAscent(Xin,Yout,nin,rnks,l
 % ---------------------------------------------------
 % set optimization options
 % ---------------------------------------------------
-if (nargin < 6) || isempty(opts)
+if (nargin < 5) || isempty(opts)
     opts.default = true;
 end
 if ~isfield(opts, 'MaxIter'); opts.MaxIter = 25; end
 if ~isfield(opts, 'TolFun'); opts.TolFun = 1e-6; end
 if ~isfield(opts, 'Display'); opts.Display = 'iter'; end
 
+% ---------------------------------------------------
+% Extract sizes of inputs
+% ---------------------------------------------------
+
+nin = cellfun(@(x)size(x,2),Xin); % get # of cells in each population
 ninpops = length(nin); % number of input populations
 nintot = sum(nin);     % total number of input neurons
 nout = size(Yout,2);
+
+% check inputs
+if length(rnks)~=ninpops
+    error('length of ``rnks'' doesn''t match # of input populations (# cells in Xin)');
+end
 
 % ---------------------------------------------------
 % Initialize using SVD of ridge regression estimate

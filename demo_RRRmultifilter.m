@@ -115,7 +115,7 @@ fprintf('Time for standard bilinear optimization algorithm: %.4f sec\n\n',t2);
 % problems.
 
 tic;
-[wUfit2,wVtfit2,wwfilts2] = bilinearMultifiltRRR_coordAscent(Xin,Yout,nin,rnks,lambda);
+[wUfit2,wVtfit2,wwfilts2] = bilinearMultifiltRRR_coordAscent(Xin,Yout,rnks,lambda);
 t3 = toc;
 fprintf('Time for multi-filter RRR optimization: %.4f sec\n\n',t3);
 
