@@ -1,32 +1,37 @@
-function [wU,wVt,wwfilts] = bilinearMultifiltRRR_coordAscent(Xin,Yout,rnks,lambda,opts)
-% [wU,wVt,wwfilts] = bilinearMultifiltRRR_coordAscent(Xin,Yout,nin,rnks,lambda,opts)
+function [wU,wVt,wwfilts,fval] = bilinearMultifiltRRR_coordAscent(Xin,Yout,rnks,lambda,opts)
+% [wU,wVt,wwfilts,fval] = bilinearMultifiltRRR_coordAscent(Xin,Yout,nin,rnks,lambda,opts)
 % 
 % Computes low-rank regression estimate using coordinate ascent in the
 % multi-filter reduced rank regression (RRR) problem setting 
 % the parameter vector.
 %
 % Finds solution to: 
-%   argmin_{W_i} ||Y - \sum_i Xi Wi||_F^2 + lambda*\sum_i ||W_i||_F^2
-% where the matrices {W_i} are all low rank, parametrized as
-%   W_i = U_i V_i^T
+%
+%   argmin_{Wi} ||Y - \sum_i Xi Wi||_F^2 + lambda*\sum_i ||W_i||_F^2
+%
+% where the matrices {Wi} are all low rank, parametrized as
+%
+%   Wi = Ui Vi^T, 
+%
+% and Ui and Vi^T denote row and column vector matrices, respectively.
 %
 % Inputs:
 % -------
-%   X - input population design matrices (T x nintot)
-%   Y - output population response matrix (T x nout) 
-%   nin - # of input neurons in each input populatin
-%   rnks - rank of each low-rank filter
+%    Xin [{1 x k}]  = cell array of input population responses {(T x nin1), ..., (T x nink)}
+%   Yout [T x nout] = output population response matrix 
+%   rnks [1 x k]    = rank of each low-rank filter
 %
-%   lambda - ridge parameter (optional)  (NOT YET SUPPORTED)
+%   lambda [1 x 1]  = ridge parameter (optional)  
 %
-%   opts - options struct (optional)
-%          fields: 'MaxIter' [25], 'TolFun' [1e-6], 'Display' ['iter'|'off']
+%     opts [struct] =   options struct (optional)
+%         fields: 'MaxIter' [25], 'TolFun' [1e-6], 'Display' ['iter'|'off']
 %
 % Outputs:
 % -------
-%   wU  = column vector matrices (cell array)
-%   wVt = row vector matrices    (cell array)
-%   wwfilts = low rank filters   (cell array)
+%        wU [{k x 1}] = cell array of column vector matrices 
+%       wVt [{k x 1}] = cell array of row vector matrices    
+%   wwfilts [{k x 1}] = cell array of low rank filters
+%      fval [1 x 1]   = loss function (squared error)
 
 
 % ---------------------------------------------------
@@ -54,20 +59,31 @@ if length(rnks)~=ninpops
 end
 
 % ---------------------------------------------------
-% Initialize using SVD of ridge regression estimate
+% Compute Sufficient Statistitics
 % ---------------------------------------------------
-% (Note: an alternative would be to initialize with RRR)
 
 % Compute sufficient statistics
 Xfull = cell2mat(Xin);
-XX = Xfull'*Xfull;  % input covariance
+XX = (Xfull'*Xfull) + lambda*speye(nintot); % input covariances + regularizer
 XY = Xfull'*Yout; % input-output cross-covariance
 
+% Divide sufficient statistics into blocks of a cell array
+XXc = mat2cell(XX,nin,nin);    % divide XX into blocks
+XXc_cols = mat2cell(XX,nintot,nin); % divide XX into columns 
+XYc = mat2cell(XY,nin,nout);   % divide XY into blocks
+rnks_cell = num2cell(rnks(:)); % filter ranks as cell array
+totrnks = sum(rnks);
+
+% ---------------------------------------------------
+% Initialize fit using SVD of ridge regression estimate
+% ---------------------------------------------------
+% (Note: an alternative would be to initialize with RRR)
+
 % compute ridge regression estimate
-wridge = (XX+(lambda)*eye(nintot))\XY; % ridge regression solution 
-wridgefilts = mat2cell(wridge,nin,nout); % convert into cell array for individual filters
+wridge = XX\XY; % ridge regression solution 
 
 % do SVD on each relevant portion of w0
+wridgefilts = mat2cell(wridge,nin,nout); % convert into cell array for individual filters
 wU = cell(ninpops,1);
 wVt = cell(ninpops,1);
 for jj = 1:ninpops
@@ -96,12 +112,10 @@ if strcmp(opts.Display, 'iter')
     fprintf('Iter 0: fval = %.4f\n',fval);
 end
 
-% % define some useful cell functions and a cell array we'll need
+% % define some useful cell functions we'll need for 
 fun_Ureshape = @(v,r)(reshape(v,[],r));    % function to reshape U matrices 
-fun_mtimesTrp = @(A,B)(vec(mtimes(A,B'))); % function to compute kronecker of transpose with matrix
-rnks_cell = num2cell(rnks(:));          % filter ranks as cell array
-XXc = mat2cell(XX,nin,nin);
-XYc = mat2cell(XY,nin,nout);
+fun_mtimesBTrp = @(A,B)(vec(mtimes(A,B'))); % function to compute kronecker of transpose with matrix
+fun_mtimesATrp = @(A,B)((mtimes(A',B))); % function to compute kronecker of transpose with matrix
 
 % ---------------------------------------------------
 % Optimize:  Run alternating coordinate ascent on U and Vt
@@ -113,20 +127,18 @@ while (iter <= opts.MaxIter) && (fchange > opts.TolFun)
     % Update U (column vectors)
     % ===========================
         
-    % project Xin onto corresponding V matrices and do regression
-    
     % Compute Covariance (Vt' o Vt)(X o X)
     Vt = cell2mat(wVt);
-    VtVc = mat2cell(Vt*Vt',rnks,rnks);
-    MvtMv = cell2mat(cellfun(@kron,VtVc,XXc,'UniformOutput',false));
+    VtV = mat2cell(Vt*Vt',rnks,rnks);
+    vXXv = cell2mat(cellfun(@kron,VtV,XXc,'UniformOutput',false));
     
     % Compute Vectorized Cross-covariance (Vt' o X')Y
-    MvtY = cell2mat(cellfun(fun_mtimesTrp,XYc,wVt,'UniformOutput',false));
+    vXY = cell2mat(cellfun(fun_mtimesBTrp,XYc,wVt,'UniformOutput',false));
         
     % solve regression problem for U
-    Unew = (MvtMv)\MvtY; 
+    Unew = vXXv\vXY; 
     
-    % Place Unew into cell array
+    % Insert Unew into cell array
     wU = mat2cell(Unew,nin.*rnks,1); % convert to cell array
     wU = cellfun(fun_Ureshape,wU,rnks_cell,'UniformOutput',false); % reshape each filter to correct shape
 
@@ -134,11 +146,20 @@ while (iter <= opts.MaxIter) && (fchange > opts.TolFun)
     % Update Vt (row vectors)
     % ===========================
     
-    % project Xin onto corresponding U matrices and do regression
-    Mu = cell2mat(cellfun(@mtimes,Xin,wU','UniformOutput',false)); % design matrix for estimating Vt
-    Vtnew = (Mu'*Mu)\(Mu'*Yout); % solve regression problem for Vt
-    wVt = mat2cell(Vtnew,rnks,nout);  % insert into cell array for Vt
-
+     % Compute covariance U' X' X U
+     XXu = cellfun(@mtimes, XXc_cols, wU', 'UniformOutput',false); % multiply columns of XX by wU
+     XXu = mat2cell(cell2mat(XXu),nin,totrnks);  % reshape so we can left-multiply by wU
+     uXXu = cell2mat(cellfun(fun_mtimesATrp,wU,XXu, 'UniformOutput',false)); % left multiply by wU^T and concatenate
+     
+     % Compute cross-covariance U' X' Y
+     uXY = cell2mat(cellfun(fun_mtimesATrp,wU,XYc, 'UniformOutput',false));
+     
+     % solve regression problem for V^T
+     Vtnew = (uXXu)\uXY;
+     
+     % insert into cell array
+     wVt = mat2cell(Vtnew,rnks,nout); % convert to cell array
+    
     % ===========================
     % Compute each weight matrix from its low-rank components
     % ===========================

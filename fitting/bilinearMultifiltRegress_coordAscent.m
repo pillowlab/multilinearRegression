@@ -1,4 +1,4 @@
-function [wt,wx,wvec] = bilinearMultifiltRegress_coordAscent(xx,xy,nt,nx,rnks,lambda,opts)
+function [wt,wx,wvec,fval] = bilinearMultifiltRegress_coordAscent(xx,xy,nt,nx,rnks,lambda,opts)
 % wstruct = bilinearMultifiltRegress_coordAscent(xx,xy,nt,nx,rnk,indsbilin,lambda,opts)
 % 
 % Computes regression estimate with a bilinear parametrization of multiple

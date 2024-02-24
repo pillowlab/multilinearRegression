@@ -19,9 +19,9 @@ setpath; % set path
 % ==== Set dimensions & rank =========
 
 % Set up true filter sizes and ranks
-nin = [45,80];  % number of neurons in each input population
-nout = 90;      % number of neurons in the output population
-rnks = [3,5];  % rank of each filter
+nin = [120,130];  % number of neurons in each input population
+nout = 200;     % number of neurons in the output population
+rnks = [3,2];  % rank of each filter
 nstim = 2000; % number of trials 
 signse = 5;  % stdev of observation noise
 
@@ -71,7 +71,7 @@ Yout = Yout + randn(nstim,nout)*signse;
 
 %% Estimate full filter using generic ridge regression
 
-lambda = 0;  % set ridge parameter
+lambda = 10;  % set ridge parameter
 
 % Compute sufficient statistics
 XX = Xfull'*Xfull;  % stimulus covariance
@@ -80,34 +80,7 @@ XY = Xfull'*Yout;   % stim-response cross-covariance
 % compute ridge solution
 wridge = (XX+lambda*eye(nintot))\XY; % ridge regression solution (matrix)
 
-%% Estimate filters generic algorithm for bilinear regression model (slow)
-
-% Here we need to make a single design matrix X such that we can rewrite
-% the optimization as
-%                        min ||vec(Y) - X vec(W)||^2
-% where vec(W) represents the individual filters vectorized and then
-% stacked on top of each other. To do this, we need to form X out of a
-% concatenation of kronecker matrices, one for each input population:
-%             X = [kron(I,X1) kron(I,X2) ...  kron(I,Xk)]
-
-tic; % time building the design matrix
-Xkron = cell(1,ninpops); % cell array for per-population design matrices
-for jj = 1:ninpops
-    Xkron{jj} = kron(speye(nout),Xin{jj}); % design matrix for jj'th input population
-end
-Xkronfull = cell2mat(Xkron);  % concatenate design matrices into 1 matrix
-XXkron = Xkronfull'*Xkronfull;  % 2nd moment matrix
-XYkron = Xkronfull'*vec(Yout);  % cross-covariance matrix
-t1 = toc;
-fprintf('Time to build kronecker design matrix: %.4f sec\n\n',t1);
-
-% Perform optimization of the weights
-tic; % time optimization
-[wUfit,wVtfit,wwfitvec] = bilinearMultifiltRegress_coordAscent(XXkron,XYkron,nin,nout*ones(1,ninpops),rnks,lambda);
-t2 = toc;
-fprintf('Time for standard bilinear optimization algorithm: %.4f sec\n\n',t2);
-
-%% Estimate filters using algorithm specific to RRR with multiple filters (fast)
+%% Estimate filters using algorithm specific to RRR with multiple filters
 
 % This version uses an algorithm which explicitly takes into account that
 % this is multivariate regression, so Yout is a matrix whose columns would
@@ -115,7 +88,7 @@ fprintf('Time for standard bilinear optimization algorithm: %.4f sec\n\n',t2);
 % problems.
 
 tic;
-[wUfit2,wVtfit2,wwfilts2] = bilinearMultifiltRRR_coordAscent(Xin,Yout,rnks,lambda);
+[wUfit,wVtfit,wwfilts] = bilinearMultifiltRRR_coordAscent(Xin,Yout,rnks,lambda);
 t3 = toc;
 fprintf('Time for multi-filter RRR optimization: %.4f sec\n\n',t3);
 
@@ -130,7 +103,7 @@ wridgefilts = mat2cell(wridge,nin,nout);  % convert ridge matrix into cell array
 wridgevec = cell2mat(cellfun(@vec, wridgefilts, 'UniformOutput', false)); % vectorize   
 
 % vectorize RRR estimated filters
-wwfitvec2 = cell2mat(cellfun(@vec, wwfilts2, 'UniformOutput', false));
+wwfitvec = cell2mat(cellfun(@vec, wwfilts, 'UniformOutput', false));
 
 % Plot true weights and estimate as a single (long) vector.
 subplot(311); 
@@ -175,4 +148,3 @@ msefun = @(x,y)(mean((x-y).^2));
 r2fun = @(x,y)(1-msefun(x,y)./msefun(y,mean(y)));
 fprintf('R-squared (ridge):    %.3f\n',r2fun(wridgevec, wwvectrue));
 fprintf('R-squared (bilinear): %.3f\n',r2fun(wwfitvec, wwvectrue));
-fprintf('R-squared (RRR):      %.3f\n',r2fun(wwfitvec2, wwvectrue));
