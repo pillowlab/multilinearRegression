@@ -20,7 +20,7 @@ setpath; % set path
 
 % Set up true filter sizes and ranks
 nin = [120,130];  % number of neurons in each input population
-nout = 200;     % number of neurons in the output population
+nout = 150;     % number of neurons in the output population
 rnks = [3,2];  % rank of each filter
 nstim = 2000; % number of trials 
 signse = 5;  % stdev of observation noise
