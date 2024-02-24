@@ -21,9 +21,9 @@ setpath; % set path
 % Set up true filter sizes and ranks
 nin = [120,130];  % number of neurons in each input population
 nout = 150;     % number of neurons in the output population
-rnks = [3,2];  % rank of each filter
+rnks = [3,5];  % rank of each filter
 nstim = 2000; % number of trials 
-signse = 5;  % stdev of observation noise
+signse = 10;  % stdev of observation noise
 
 ninpops = length(nin); % number of input populations
 nintot = sum(nin);     % total number of input neurons
@@ -88,9 +88,18 @@ wridge = (XX+lambda*eye(nintot))\XY; % ridge regression solution (matrix)
 % problems.
 
 tic;
-[wUfit,wVtfit,wwfilts] = bilinearMultifiltRRR_coordAscent(Xin,Yout,rnks,lambda);
-t3 = toc;
-fprintf('Time for multi-filter RRR optimization: %.4f sec\n\n',t3);
+[wUfit,wVtfit,wwfilts,fval1] = bilinearMultifiltRRR_coordAscent(Xin,Yout,rnks,lambda);
+t1 = toc;
+fprintf('Time for multi-filter RRR optimization: %.4f sec\n\n',t1);
+
+
+% % test implementation where we pre-compute XX and XY
+% XXplusRidge = XX + lambda*speye(nintot);
+% tic;
+% [wUfit,wVtfit,wwfilts,fval2] = bilinearMultifiltRRR_coordAscent_suffstats(XXplusRidge,XY, nin,rnks);
+% t2 = toc;
+% fprintf('Time for "fast" multi-filter RRR optimization: %.4f sec\n\n',t2);
+
 
 %% Make plots (assuming 2 filters in model)
 

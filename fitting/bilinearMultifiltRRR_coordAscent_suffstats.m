@@ -1,5 +1,5 @@
-function [wU,wVt,wwfilts,fval] = bilinearMultifiltRRR_coordAscent(Xin,Yout,rnks,lambda,opts)
-% [wU,wVt,wwfilts,fval] = bilinearMultifiltRRR_coordAscent(Xin,Yout,rnks,lambda,opts)
+function [wU,wVt,wwfilts,fval] = bilinearMultifiltRRR_coordAscent_suffstats(XX_plus_Ridge,XY,nin,rnks,opts)
+% [wU,wVt,wwfilts,fval] = bilinearMultifiltRRR_coordAscent_suffstats(XX,XY,nin,rnks,opts)
 % 
 % Computes low-rank regression estimate using coordinate ascent in the
 % multi-filter reduced rank regression (RRR) problem setting 
@@ -17,13 +17,13 @@ function [wU,wVt,wwfilts,fval] = bilinearMultifiltRRR_coordAscent(Xin,Yout,rnks,
 %
 % Inputs:
 % -------
-%    Xin [{1 x k}]  = cell array of input population responses {(T x nin1), ..., (T x nink)}
-%   Yout [T x nout] = output population response matrix 
-%   rnks [1 x k]    = rank of each low-rank filter
+%     XX_plus_Ridge [nintot x nintot] = covariance matrix of input
+%                                       populations + ridge * identity
+%     XY [nintot x nout]   = cross-covariance of input and output
+%    nin [1 x k]           = # of neurons in each population
+%   rnks [1 x k]           = rank of each low-rank filter
 %
-%   lambda [1 x 1]  = ridge parameter (optional)  
-%
-%     opts [struct] =   options struct (optional)
+%   opts [struct] =   options struct (optional)
 %         fields: 'MaxIter' [25], 'TolFun' [1e-6], 'Display' ['iter'|'off']
 %
 % Outputs:
@@ -48,10 +48,9 @@ if ~isfield(opts, 'Display'); opts.Display = 'iter'; end
 % Extract sizes of inputs
 % ---------------------------------------------------
 
-nin = cellfun(@(x)size(x,2),Xin); % get # of cells in each population
 ninpops = length(nin); % number of input populations
 nintot = sum(nin);     % total number of input neurons
-nout = size(Yout,2);
+nout = size(XY,2);
 
 % check inputs
 if length(rnks)~=ninpops
@@ -59,17 +58,12 @@ if length(rnks)~=ninpops
 end
 
 % ---------------------------------------------------
-% Compute Sufficient Statistitics
+% Put sufficient statistitics into helpful cell arrays
 % ---------------------------------------------------
 
-% Compute sufficient statistics
-Xfull = cell2mat(Xin);
-XX = (Xfull'*Xfull) + lambda*speye(nintot); % input covariances + regularizer
-XY = Xfull'*Yout; % input-output cross-covariance
-
 % Divide sufficient statistics into blocks of a cell array
-XXc = mat2cell(XX,nin,nin);    % divide XX into blocks
-XXc_cols = mat2cell(XX,nintot,nin); % divide XX into columns 
+XXc = mat2cell(XX_plus_Ridge,nin,nin);    % divide XX into blocks
+XXc_cols = mat2cell(XX_plus_Ridge,nintot,nin); % divide XX into columns 
 XYc = mat2cell(XY,nin,nout);   % divide XY into blocks
 rnks_cell = num2cell(rnks(:)); % filter ranks as cell array
 totrnks = sum(rnks);
@@ -80,7 +74,7 @@ totrnks = sum(rnks);
 % (Note: an alternative would be to initialize with RRR)
 
 % compute ridge regression estimate
-wridge = XX\XY; % ridge regression solution 
+wridge = XX_plus_Ridge\XY; % ridge regression solution 
 
 % do SVD on each relevant portion of w0
 wridgefilts = mat2cell(wridge,nin,nout); % convert into cell array for individual filters
@@ -102,7 +96,7 @@ ww0 = cellfun(@mtimes,wU,wVt,'UniformOutput',false);
 ww0 = cell2mat(ww0);
 
 % Evaluate the loss function at the start of training
-fval = 0.5*trace(ww0'*XX*ww0) - sum(sum((ww0.*XY)));
+fval = 0.5*trace(ww0'*XX_plus_Ridge*ww0) - sum(sum((ww0.*XY)));
 fchange = inf; % change in function value
 iter = 1;  % iteration counter
 
@@ -171,7 +165,7 @@ while (iter <= opts.MaxIter) && (fchange > opts.TolFun)
     % ===========================
     
     ww = cell2mat(wwfilts);  % put filters into a single weight matrix
-    fvalnew = 0.5*sum(sum(ww.*(XX*ww))) - sum(sum((ww.*XY)));
+    fvalnew = 0.5*sum(sum(ww.*(XX_plus_Ridge*ww))) - sum(sum((ww.*XY)));
     fchange = fval-fvalnew;
     fval = fvalnew;
     iter = iter+1;
