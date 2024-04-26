@@ -64,7 +64,13 @@ end
 
 % Compute sufficient statistics
 Xfull = cell2mat(Xin);
-XX = (Xfull'*Xfull) + lambda*speye(nintot); % input covariances + regularizer
+if length(lambda) == 1 % uniform regularization strength
+    XX = (Xfull'*Xfull) + lambda*speye(nintot); 
+elseif length(lambda) == ninpops % different regularization strengths for each input population
+    XX = (Xfull'*Xfull) + sparse(1:nintot,1:nintot,cell2mat(arrayfun(@(ii) lambda(ii)*ones(1,nin(ii)),1:ninpops,'uni',0))); 
+else
+    error('lambda must be a scalar or a vector of length equal to the number of input populations');
+end
 XY = Xfull'*Yout; % input-output cross-covariance
 
 % Divide sufficient statistics into blocks of a cell array
